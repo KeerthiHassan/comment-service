@@ -43,5 +43,25 @@ public class CommentServiceImplementation implements CommentService{
         return commentResponse;
     }
 
-   
+    @Override
+    public CommentResponse updateComment(String postId,String commentId, UpdateComments updateComments) {
+        Comment comment=commentRepo.findBycommentId(commentId);
+        comment.setComment(updateComments.getComment());
+        comment.setCommentedBy(updateComments.getCommentedBy());
+        comment.setUpdatedAt(LocalDate.now());
+        Comment comments=commentRepo.save(comment);
+
+        Integer count =feign.getLikesCount(commentId).getBody();
+
+        CommentResponse commentResponse=new CommentResponse();
+        commentResponse.setCommentId(comments.getCommentId());
+        commentResponse.setComment(comments.getComment());
+        commentResponse.setCommentedBy(comments.getCommentedBy());
+        commentResponse.setCreatedAt(comments.getCreatedAt());
+        commentResponse.setUpdatedAt(comments.getUpdatedAt());
+        commentResponse.setLikesCount(count);
+        return commentResponse;
+    }
+
+
 }

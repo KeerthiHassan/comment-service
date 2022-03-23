@@ -24,6 +24,10 @@ public class CommentController {
         return new ResponseEntity<CommentResponse>(commentService.createComment(postId,comment),HttpStatus.CREATED);
     }
 
+    @PutMapping("/posts/{postId}/comments/{commentId}")
+    public ResponseEntity<CommentResponse> updateComment(@PathVariable ("postId") String postId,@PathVariable("commentId") String commentId,@RequestBody UpdateComments updateComments){
+        return new ResponseEntity<CommentResponse>(commentService.updateComment(postId,commentId,updateComments),HttpStatus.OK);
+    }
 
 
 
