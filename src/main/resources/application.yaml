@@ -1,0 +1,27 @@
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    preferIpAddress: true
+    hostname: localhost
+spring:
+  application:
+    name: comment
+  cloud:
+    discovery:
+      enabled: true
+  data:
+    mongodb:
+      database: user_db
+      port: 27017
+server:
+  port: 3015
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+feign:
+  circuitBreaker:
+    enable: true
