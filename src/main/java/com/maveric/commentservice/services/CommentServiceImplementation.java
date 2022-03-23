@@ -62,6 +62,11 @@ public class CommentServiceImplementation implements CommentService{
         commentResponse.setLikesCount(count);
         return commentResponse;
     }
+    @Override
+    public String deleteComment(String postId,String commentId) {
+        commentRepo.deleteById(commentId);
+        return "Comment deleted successfully";
+    }
 
 
 }

@@ -29,6 +29,11 @@ public class CommentController {
         return new ResponseEntity<CommentResponse>(commentService.updateComment(postId,commentId,updateComments),HttpStatus.OK);
     }
 
+    @DeleteMapping("/posts/{postId}/comments/{commentId}")
+    public ResponseEntity<String> deletePost(@PathVariable ("postId") String postId,@PathVariable("commentId") String commentId){
+        return new ResponseEntity<String>(commentService.deleteComment(postId,commentId),HttpStatus.OK);
+    }
+
 
 
 }

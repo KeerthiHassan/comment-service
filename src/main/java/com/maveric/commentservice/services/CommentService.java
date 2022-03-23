@@ -10,4 +10,6 @@ public interface CommentService {
 
     CommentResponse createComment(String postId,Comment comment);
     CommentResponse updateComment(String postId,String commentId, UpdateComments updateComment);
+    String deleteComment(String postId,String commentId);
 }
+
