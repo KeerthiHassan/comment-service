@@ -1,8 +1,11 @@
 package com.maveric.commentservice.services;
 
 import com.maveric.commentservice.dto.CommentResponse;
-import com.maveric.commentservice.dto.UpdateComments;
-import com.maveric.commentservice.feign.Feign;
+import com.maveric.commentservice.dto.Commentdto;
+import com.maveric.commentservice.dto.UserResponse;
+import com.maveric.commentservice.exception.CommentNotFound;
+import com.maveric.commentservice.feign.LikeFeign;
+import com.maveric.commentservice.feign.UserFeign;
 import com.maveric.commentservice.model.Comment;
 import com.maveric.commentservice.repo.CommentRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,31 +23,76 @@ public class CommentServiceImplementation implements CommentService{
     CommentRepo commentRepo;
 
     @Autowired
-    Feign feign;
+    LikeFeign feign;
 
+    @Autowired
+    UserFeign userFeign;
 
-
+    private String commentId;
+    private UserResponse commentedBy;
+    private String comment;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
+    private Integer likesCount;
 
     @Override
-    public CommentResponse createComment(String postId,Comment comment) {
+    public List<CommentResponse> getComments(String postId) {
+        List<Comment> commentList=commentRepo.findBypostId(postId);
+        List<CommentResponse> commentResponses=new ArrayList<>();
+        for(Comment comment:commentList)
+        {
+            CommentResponse commentResponse=new CommentResponse();
+            commentResponse.setCommentId(comment.getCommentId());
+            commentResponse.setCommentedBy(userFeign.getUsersById(comment.getCommentedBy()).getBody());
+            commentResponse.setComment(comment.getComment());
+            commentResponse.setCreatedAt(comment.getCreatedAt());
+            commentResponse.setUpdatedAt(comment.getUpdatedAt());
+            Integer count =feign.getLikesCount(comment.getCommentId()).getBody();
+            commentResponse.setLikesCount(count);
+             commentResponses.add(commentResponse);
+        }
+        return commentResponses;
+    }
 
+    @Override
+    public CommentResponse createComment(String postId,Commentdto commentdto) {
+        Comment comment=new Comment();
         CommentResponse commentResponse=new CommentResponse();
         comment.setPostId(postId);
         comment.setCreatedAt(LocalDate.now());
         comment.setUpdatedAt(LocalDate.now());
+        comment.setComment(commentdto.getComment());
+        UserResponse userResponse=(userFeign.getUsersById(commentdto.getCommentedBy()).getBody());
+        comment.setCommentedBy(commentdto.getCommentedBy());
+        Comment comments=commentRepo.save(comment);
+        return new CommentResponse(comments.getCommentId(),userFeign.getUsersById(comment.getCommentedBy()).getBody(),comments.getComment(),
+                comments.getCreatedAt(),comments.getUpdatedAt(),feign.getLikesCount(comments.getCommentId()).getBody());
+    }
 
-        Comment comments= commentRepo.save(comment);
-        commentResponse.setCommentId(comments.getCommentId());
-        commentResponse.setComment(comments.getComment());
-        commentResponse.setCommentedBy(comments.getCommentedBy());
-        commentResponse.setCreatedAt(comments.getCreatedAt());
-        commentResponse.setUpdatedAt(comments.getUpdatedAt());
-        commentResponse.setLikesCount(0);
+    @Override
+    public Integer getCommentsCount(String postId) {
+        Integer count=commentRepo.findBypostId(postId).size();
+        return count;
+    }
+
+    @Override
+    public CommentResponse getCommentDetails(String postId,String commentId) {
+        Integer count =feign.getLikesCount(commentId).getBody();
+        Comment comment=commentRepo.findBycommentId(commentId);
+        if(comment==null)
+            throw new CommentNotFound("Comment not found with Id "+commentId);
+        CommentResponse commentResponse=new CommentResponse();
+        commentResponse.setCommentId(comment.getCommentId());
+        commentResponse.setComment(comment.getComment());
+        commentResponse.setCommentedBy(userFeign.getUsersById(comment.getCommentedBy()).getBody());
+        commentResponse.setCreatedAt(comment.getCreatedAt());
+        commentResponse.setUpdatedAt(comment.getUpdatedAt());
+        commentResponse.setLikesCount(count);
         return commentResponse;
     }
 
     @Override
-    public CommentResponse updateComment(String postId,String commentId, UpdateComments updateComments) {
+    public CommentResponse updateComment(String postId,String commentId, Commentdto updateComments) {
         Comment comment=commentRepo.findBycommentId(commentId);
         comment.setComment(updateComments.getComment());
         comment.setCommentedBy(updateComments.getCommentedBy());
@@ -56,17 +104,20 @@ public class CommentServiceImplementation implements CommentService{
         CommentResponse commentResponse=new CommentResponse();
         commentResponse.setCommentId(comments.getCommentId());
         commentResponse.setComment(comments.getComment());
-        commentResponse.setCommentedBy(comments.getCommentedBy());
+        commentResponse.setCommentedBy(userFeign.getUsersById(comment.getCommentedBy()).getBody());
         commentResponse.setCreatedAt(comments.getCreatedAt());
         commentResponse.setUpdatedAt(comments.getUpdatedAt());
         commentResponse.setLikesCount(count);
         return commentResponse;
     }
+
     @Override
     public String deleteComment(String postId,String commentId) {
-        commentRepo.deleteById(commentId);
+
+        Comment comment=commentRepo.findBycommentId(commentId);
+        if(comment==null)
+        throw new CommentNotFound("Comment Doesn't Exists");
+         commentRepo.deleteById(commentId);
         return "Comment deleted successfully";
     }
-
-
 }
