@@ -25,7 +25,6 @@ public class CommentServiceImplementation implements CommentService{
     @Autowired
     LikeFeign feign;
 
-
     @Autowired
     UserFeign userFeign;
 
@@ -35,25 +34,6 @@ public class CommentServiceImplementation implements CommentService{
     private LocalDate createdAt;
     private LocalDate updatedAt;
     private Integer likesCount;
-
-    @Override
-    public List<CommentResponse> getComments(String postId) {
-        List<Comment> commentList=commentRepo.findBypostId(postId);
-        List<CommentResponse> commentResponse=new ArrayList<>();
-        for(Comment comment:commentList){
-            Integer count =feign.getLikesCount(comment.getCommentId()).getBody();
-            CommentResponse commentResponsetemp =new CommentResponse();
-            commentResponsetemp.setCommentId(comment.getCommentId());
-            commentResponsetemp.setComment(comment.getComment());
-            commentResponsetemp.setCommentedBy(comment.getCommentedBy());
-            commentResponsetemp.setCreatedAt(comment.getCreatedAt());
-            commentResponsetemp.setUpdatedAt(comment.getUpdatedAt());
-            commentResponsetemp.setLikesCount(count);
-            commentResponse.add(commentResponsetemp);
-        }
-        return commentResponse;
-    }
-
 
     @Override
     public List<CommentResponse> getComments(String postId) {
@@ -69,7 +49,7 @@ public class CommentServiceImplementation implements CommentService{
             commentResponse.setUpdatedAt(comment.getUpdatedAt());
             Integer count =feign.getLikesCount(comment.getCommentId()).getBody();
             commentResponse.setLikesCount(count);
-             commentResponses.add(commentResponse);
+            commentResponses.add(commentResponse);
         }
         return commentResponses;
     }
@@ -112,32 +92,7 @@ public class CommentServiceImplementation implements CommentService{
     }
 
     @Override
-
     public CommentResponse updateComment(String postId,String commentId, Commentdto updateComments) {
-
-    public Integer getCommentsCount(String postId) {
-        Integer count=commentRepo.findBypostId(postId).size();
-        return count;
-    }
-
-    @Override
-    public CommentResponse getCommentDetails(String postId,String commentId) {
-        Integer count =feign.getLikesCount(commentId).getBody();
-        Comment comment=commentRepo.findBycommentId(commentId);
-        CommentResponse commentResponse=new CommentResponse();
-        commentResponse.setCommentId(comment.getCommentId());
-        commentResponse.setComment(comment.getComment());
-        commentResponse.setCommentedBy(comment.getCommentedBy());
-        commentResponse.setCreatedAt(comment.getCreatedAt());
-        commentResponse.setUpdatedAt(comment.getUpdatedAt());
-        commentResponse.setLikesCount(count);
-        return commentResponse;
-    }
-
-
-    @Override
-    public CommentResponse updateComment(String postId,String commentId, UpdateComments updateComments) {
-
         Comment comment=commentRepo.findBycommentId(commentId);
         comment.setComment(updateComments.getComment());
         comment.setCommentedBy(updateComments.getCommentedBy());
@@ -161,8 +116,8 @@ public class CommentServiceImplementation implements CommentService{
 
         Comment comment=commentRepo.findBycommentId(commentId);
         if(comment==null)
-        throw new CommentNotFound("Comment Doesn't Exists");
-         commentRepo.deleteById(commentId);
+            throw new CommentNotFound("Comment Doesn't Exists");
+        commentRepo.deleteById(commentId);
         return "Comment deleted successfully";
     }
 }
